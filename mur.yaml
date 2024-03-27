@@ -1,0 +1,59 @@
+networkPolicy:
+  enabled: true
+
+podSelector:
+  matchLabels:
+    app.kubernetes.io/name: murmur-rest-opr
+    app.kubernetes.io/instance: opr
+
+ingressRules:
+  - from:
+      - podSelector:
+          matchLabels:
+            app.kubernetes.io/name: murmur
+            app.kubernetes.io/instance: opr
+    ports:
+      - protocol: TCP
+        port: 6502
+---
+{{- if .Values.networkPolicy.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "rafa-common-chart.fullname" . }}-network-policy
+  labels:
+    {{- include "rafa-common-chart.labels" . | nindent 4 }}
+spec:
+{{- if .Values.podSelector }}
+  podSelector:
+    matchLabels:
+{{ toYaml .Values.podSelector.matchLabels | nindent 7 }}
+{{- end }}
+{{- if or .Values.ingressRules .Values.egressRules }}
+  policyTypes:
+{{- if .Values.ingressRules }}
+    - Ingress
+{{- end }}
+{{- if .Values.egressRules }}
+    - Egress
+{{- end }}
+{{- end }}
+{{- if .Values.egressRules }}
+  egress:
+{{-  range $rule := .Values.egressRules }}
+    - to:
+{{ toYaml $rule.to | nindent 9 }}
+      ports:
+{{ toYaml $rule.ports | nindent 9 }}  
+{{- end }}
+{{- end }}
+{{- if .Values.ingressRules }}
+  ingress:
+{{-  range $rule := .Values.ingressRules }}
+    - from:
+{{ toYaml $rule.from | nindent 7 }}
+      ports:
+{{ toYaml $rule.ports | nindent 9 }}  
+{{- end }}
+{{- end }}
+{{- end }}
