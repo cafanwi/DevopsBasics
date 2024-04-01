@@ -57,3 +57,87 @@ spec:
 {{- end }}
 {{- end }}
 {{- end }}
+---
+
+
+# Default values for rafa-common-chart.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image:
+  repository: nginx
+  pullPolicy: IfNotPresent
+  tag: ""
+
+service:
+  enabled: true  # Whether the service is enabled or not
+  type: ClusterIP  # Type of service, e.g., ClusterIP, NodePort, LoadBalancer
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8080
+
+networkPolicy:
+  enabled: true
+  name: soso-network-policy
+  podSelector:
+    matchLabels:
+      app: mumble-rest-murmur
+  ingressRules:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: mumble-rest
+        - podSelector:
+            matchLabels:
+              app: murmur
+      ports:
+        - port: 8082
+          protocol: TCP
+        - port: 6502
+          protocol: TCP
+---
+
+{{- if .Values.networkPolicy.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ .Values.networkPolicy.name }}
+  labels:
+    {{- include "reflect-common-chart.labels" . | nindent 4 }}
+spec:
+{{- if .Values.networkPolicy.podSelector }}
+  podSelector:
+    matchLabels:
+{{ toYaml .Values.networkPolicy.podSelector.matchLabels | nindent 7 }}
+{{- end }}
+{{- if or .Values.networkPolicy.ingressRules .Values.networkPolicy.egressRules }}
+  policyTypes:
+{{- if .Values.networkPolicy.ingressRules }}
+    - Ingress
+{{- end }}
+{{- if .Values.networkPolicy.egressRules }}
+    - Egress
+{{- end }}
+{{- end }}
+{{- if .Values.networkPolicy.egressRules }}
+  egress:
+{{-  range $rule := .Values.networkPolicy.egressRules }}
+    - to:
+{{ toYaml $rule.to | nindent 9 }}
+      ports:
+{{ toYaml $rule.ports | nindent 9 }}  
+{{- end }}
+{{- end }}
+{{- if .Values.networkPolicy.ingressRules }}
+  ingress:
+{{-  range $rule := .Values.networkPolicy.ingressRules }}
+    - from:
+{{ toYaml $rule.from | nindent 7 }}
+      ports:
+{{ toYaml $rule.ports | nindent 9 }}  
+{{- end }}
+{{- end }}
+{{- end }}
