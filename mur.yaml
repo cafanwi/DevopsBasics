@@ -141,3 +141,9 @@ spec:
 {{- end }}
 {{- end }}
 {{- end }}
+---
+
+
+
+
+"My goal is to become a proficient DevOps engineer with a focus on security, container orchestration, and API management. I aim to specialize in Vault for security and secret management, develop high-level Proof of Concepts (PoCs) for Kubernetes with Istio integration, provide effective support to users of the Elastic application stack, and assist in the implementation and management of IBM API Connect (APIC) solutions. By mastering these areas, I will contribute to enhancing our organization's security posture, optimizing application deployment and management processes, and empowering teams to efficiently leverage modern cloud-native technologies."
